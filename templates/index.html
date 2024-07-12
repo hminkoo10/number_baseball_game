@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Baseball Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Number Baseball Game</h1>
+        <form id="guessForm">
+            <input type="text" id="guessInput" name="guess" placeholder="Enter 5-digit number" required>
+            <button type="submit">Guess</button>
+        </form>
+        <div id="result"></div>
+        <div id="history-container">
+            <h2>Guess History</h2>
+            <div id="history"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('guessForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const guessInput = document.getElementById('guessInput').value;
+            
+            // "정답"이라는 글자가 입력되었을 때 정답 팝업
+            if (guessInput === "정답") {
+                fetch('/get_secret_number')
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(`The secret number is: ${data.secret_number}`);
+                    });
+                return;
+            }
+
+            fetch('/guess', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `guess=${guessInput}`,
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('result');
+                const historyDiv = document.getElementById('history');
+                
+                if (data.error) {
+                    resultDiv.textContent = data.error;
+                } else if (data.result === 'win') {
+                    resultDiv.textContent = data.message;
+                    historyDiv.innerHTML = '';
+                    data.guesses.forEach(guess => {
+                        historyDiv.innerHTML += `<p>${guess.guess} - Strike: ${guess.strike}, Ball: ${guess.ball}</p>`;
+                    });
+                } else {
+                    resultDiv.textContent = `Strike: ${data.strike}, Ball: ${data.ball}`;
+                    const newGuess = document.createElement('p');
+                    newGuess.textContent = `${data.guesses[data.guesses.length - 1].guess} - Strike: ${data.strike}, Ball: ${data.ball}`;
+                    historyDiv.appendChild(newGuess);
+                    if (historyDiv.children.length > 7) {
+                        historyDiv.removeChild(historyDiv.firstChild);
+                    }
+                    historyDiv.scrollTop = historyDiv.scrollHeight;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
