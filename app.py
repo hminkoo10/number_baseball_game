@@ -35,9 +35,10 @@ def guess():
     strike, ball = check_guess(secret_number, guess)
     
     session['guesses'].append({'guess': guess, 'strike': strike, 'ball': ball})
+    guess_count = len(session['guesses'])
 
     if strike == 5:
-        response = {'result': 'win', 'message': 'Congratulations! You guessed the correct number!', 'guesses': session['guesses']}
+        response = {'result': 'win', 'message': f'Congratulations! You guessed the correct number in {guess_count} tries!', 'guesses': session['guesses']}
         session.pop('secret_number')
         session.pop('guesses')
     else:
@@ -51,4 +52,4 @@ def get_secret_number():
     return jsonify({'secret_number': secret_number})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run("0.0.0.0",port=5000)
